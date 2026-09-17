@@ -24,7 +24,7 @@ if ticker:
             balance_sheet = stock.balance_sheet
             financials = stock.financials
             
-            # [최신 규격 반영] Z-Score에 필요한 회계 계정 추출
+            # Z-Score에 필요한 회계 계정 추출
             total_assets = balance_sheet.loc['Total Assets'].iloc[0]
             
             # 야후 파이낸스 업데이트 대응: Total Liabilities 계정명 매칭 보정
@@ -64,7 +64,7 @@ if ticker:
                     st.error("🔴 **Distress Zone (부실 위험)**: 2년 내 파산 위험성이 높은 한계기업 징후가 포착되었습니다.")
             
             with col2:
-                # 게이지 차트 시각화
+                # 게이지 차트 시각화 (좌표 오류 수정 완료)
                 fig = go.Figure(go.Indicator(
                     mode = "gauge+number",
                     value = z_score,
