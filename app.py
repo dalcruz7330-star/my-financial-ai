@@ -64,11 +64,13 @@ if ticker:
                     st.error("🔴 Distress Zone (부실 위험): 2년 내 파산 위험성이 높은 한계기업 징후가 포착되었습니다.")
             
             with col2:
-                # 게이지 차트 시각화 (좌표 완벽 주입)
+                # 게이지 차트 시각화 (서식 탈피 완벽 주입)
+                x_range = [0, 1]
+                y_range = [0, 1]
                 fig = go.Figure(go.Indicator(
                     mode = "gauge+number",
                     value = z_score,
-                    domain = {'x':, 'y': [0, 1]},
+                    domain = {'x': x_range, 'y': y_range},
                     title = {'text': "부실 예측 신호등"},
                     gauge = {
                         'axis': {'range': [0, 5]},
