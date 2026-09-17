@@ -31,7 +31,7 @@ if ticker:
             ebit = financials.loc['EBIT'].iloc[0]
             market_cap = info.get('marketCap', 1)
             
-            # [긴급 대응] 야후 파이낸스 부채 계정 모든 경우의 수 완벽 추적
+            # 야후 파이낸스 부채 계정 모든 경우의 수 추적
             total_liab = None
             liab_keys = ['Total Liabilities', 'Total Liabilities Net Minor Interest', 'Total Liabilities Net Minor Interests']
             
@@ -40,21 +40,20 @@ if ticker:
                     total_liab = balance_sheet.loc[key].iloc[0]
                     break
             
-            # 만약 위 규칙으로도 못 찾았을 경우: 자산 - 자본 = 부채 공식 강제 적용 (CPA 검증 로직)
+            # 예외 방어용: 자산 - 자본 = 부채 공식 적용
             if total_liab is None or pd.isna(total_liab):
                 if 'Stockholders Equity' in balance_sheet.index:
                     equity = balance_sheet.loc['Stockholders Equity'].iloc[0]
                     total_liab = total_assets - equity
                 else:
-                    total_liab = total_assets * 0.5  # 예외 방어용 디폴트 비율
+                    total_liab = total_assets * 0.5
             
             # 3. 알트만 Z-Score 재무 비율 계산 (CPA 검증 로직)
-            X1 = working_capital / total_assets  # 유동성
-            X2 = re_retained / total_assets     # 누적 수익성
-            X3 = ebit / total_assets            # 자산 수익성
-            X4 = market_cap / total_liab        # 재무 구조 (레버리지)
+            X1 = working_capital / total_assets
+            X2 = re_retained / total_assets
+            X3 = ebit / total_assets
+            X4 = market_cap / total_liab
             
-            # 제조업/비제조업 범용 모델 기준 가중치 산정 (Z = 1.2X1 + 1.4X2 + 3.3X3 + 0.6X4)
             z_score = (1.2 * X1) + (1.4 * X2) + (3.3 * X3) + (0.6 * X4)
             
             # 4. 결과 화면 UI 구성
@@ -65,7 +64,6 @@ if ticker:
             with col1:
                 st.metric(label="최종 Altman Z-Score", value=f"{z_score:.2f}")
                 
-                # 안전 구역 진단
                 if z_score > 2.99:
                     st.success("🟢 Safe Zone (안전): 재무 건전성이 매우 우수하며 부실 가능성이 극히 낮습니다.")
                 elif 1.81 <= z_score <= 2.99:
@@ -74,21 +72,21 @@ if ticker:
                     st.error("🔴 Distress Zone (부실 위험): 2년 내 파산 위험성이 높은 한계기업 징후가 포착되었습니다.")
             
             with col2:
-                # 게이지 차트 시각화
+                # 에러 유발 문법을 완벽히 우회한 안전한 차트 구조
                 fig = go.Figure(go.Indicator(
                     mode = "gauge+number",
                     value = z_score,
-                    domain = {'x':, 'y': [0, 1]},
-                    title = {'text': "부실 예측 신호등"},
-                    gauge = {
-                        'axis': {'range': [0, 5]},
-                        'bar': {'color': "black"},
-                        'steps' : [
-                            {'range': [0, 1.81], 'color': "red"},
-                            {'range': [1.81, 2.99], 'color': "orange"},
-                            {'range': [2.99, 5], 'color': "green"}
-                        ],
-                    }
+                    domain = dict(x=tuple([0.0, 1.0]), y=tuple([0.0, 1.0])),
+                    title = dict(text="부실 예측 신호등"),
+                    gauge = dict(
+                        axis = dict(range=tuple([0.0, 5.0])),
+                        bar = dict(color="black"),
+                        steps = [
+                            dict(range=tuple([0.0, 1.81]), color="red"),
+                            dict(range=tuple([1.81, 2.99]), color="orange"),
+                            dict(range=tuple([2.99, 5.0]), color="green")
+                        ]
+                    )
                 ))
                 st.plotly_chart(fig, use_container_width=True)
                 
