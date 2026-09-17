@@ -24,9 +24,15 @@ if ticker:
             balance_sheet = stock.balance_sheet
             financials = stock.financials
             
-            # Z-Score에 필요한 회계 계정 추출
+            # [최신 규격 반영] Z-Score에 필요한 회계 계정 추출
             total_assets = balance_sheet.loc['Total Assets'].iloc[0]
-            total_liab = balance_sheet.loc['Total Liabilities Net Minor Interest'].iloc[0]
+            
+            # 야후 파이낸스 업데이트 대응: Total Liabilities 계정명 매칭 보정
+            if 'Total Liabilities' in balance_sheet.index:
+                total_liab = balance_sheet.loc['Total Liabilities'].iloc[0]
+            else:
+                total_liab = balance_sheet.loc['Total Liabilities Net Minor Interest'].iloc[0]
+                
             working_capital = balance_sheet.loc['Working Capital'].iloc[0]
             re_retained = balance_sheet.loc['Retained Earnings'].iloc[0]
             ebit = financials.loc['EBIT'].iloc[0]
@@ -44,7 +50,7 @@ if ticker:
             # 4. 결과 화면 UI 구성
             st.subheader(f"🏢 {company_name} ({ticker}) 신용평가 분석 결과")
             
-            col1, col2 = st.columns([1, 1])
+            col1, col2 = st.columns(2)
             
             with col1:
                 st.metric(label="최종 Altman Z-Score", value=f"{z_score:.2f}")
@@ -52,20 +58,17 @@ if ticker:
                 # 안전 구역 진단
                 if z_score > 2.99:
                     st.success("🟢 **Safe Zone (안전)**: 재무 건전성이 매우 우수하며 부실 가능성이 극히 낮습니다.")
-                    status_color = "green"
                 elif 1.81 <= z_score <= 2.99:
                     st.warning("🟡 **Grey Zone (주의)**: 잠재적 리스크 요인이 존재하므로 정밀 모니터링이 필요합니다.")
-                    status_color = "orange"
                 else:
                     st.error("🔴 **Distress Zone (부실 위험)**: 2년 내 파산 위험성이 높은 한계기업 징후가 포착되었습니다.")
-                    status_color = "red"
             
             with col2:
                 # 게이지 차트 시각화
                 fig = go.Figure(go.Indicator(
                     mode = "gauge+number",
                     value = z_score,
-                    domain = {'x': [0, 1], 'y': [0, 1]},
+                    domain = {'x':, 'y': [0, 1]},
                     title = {'text': "부실 예측 신호등"},
                     gauge = {
                         'axis': {'range': [0, 5]},
