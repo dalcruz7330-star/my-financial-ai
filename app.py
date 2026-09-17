@@ -20,14 +20,14 @@ if ticker:
             info = stock.info
             company_name = info.get('longName', ticker)
             
-            # 재무제표 로드 (최신 연도 데이터)
+            # 재무제표 로드
             balance_sheet = stock.balance_sheet
             financials = stock.financials
             
             # Z-Score에 필요한 회계 계정 추출
             total_assets = balance_sheet.loc['Total Assets'].iloc[0]
             
-            # 야후 파이낸스 업데이트 대응: Total Liabilities 계정명 매칭 보정
+            # 야후 파이낸스 업데이트 대응 계정 매칭 보정
             if 'Total Liabilities' in balance_sheet.index:
                 total_liab = balance_sheet.loc['Total Liabilities'].iloc[0]
             else:
@@ -57,14 +57,14 @@ if ticker:
                 
                 # 안전 구역 진단
                 if z_score > 2.99:
-                    st.success("🟢 **Safe Zone (안전)**: 재무 건전성이 매우 우수하며 부실 가능성이 극히 낮습니다.")
+                    st.success("🟢 Safe Zone (안전): 재무 건전성이 매우 우수하며 부실 가능성이 극히 낮습니다.")
                 elif 1.81 <= z_score <= 2.99:
-                    st.warning("🟡 **Grey Zone (주의)**: 잠재적 리스크 요인이 존재하므로 정밀 모니터링이 필요합니다.")
+                    st.warning("🟡 Grey Zone (주의): 잠재적 리스크 요인이 존재하므로 정밀 모니터링이 필요합니다.")
                 else:
-                    st.error("🔴 **Distress Zone (부실 위험)**: 2년 내 파산 위험성이 높은 한계기업 징후가 포착되었습니다.")
+                    st.error("🔴 Distress Zone (부실 위험): 2년 내 파산 위험성이 높은 한계기업 징후가 포착되었습니다.")
             
             with col2:
-                # 게이지 차트 시각화 (좌표 완벽 수정)
+                # 게이지 차트 시각화 (좌표 완벽 주입)
                 fig = go.Figure(go.Indicator(
                     mode = "gauge+number",
                     value = z_score,
